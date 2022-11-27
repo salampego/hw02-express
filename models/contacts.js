@@ -1,72 +1,43 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { v4: uuidv4 } = require("uuid");
-
-const contactsPath = path.join(__dirname, "/contacts.json");
+const { Contacts } = require("./contacts.model");
 
 const listContacts = async () => {
-  const dbRaw = await fs.readFile(contactsPath);
-  const db = JSON.parse(dbRaw);
-  return db;
+  return await Contacts.find({});
 };
 const getContactById = async (contactId) => {
-  const dbRaw = await fs.readFile(contactsPath);
-  const db = JSON.parse(dbRaw);
-  const filterDb = db.find(({ id }) => id === contactId);
-  return filterDb;
+  const contact = await Contacts.findById(contactId);
+  if (contact) {
+    return contact;
+  }
+  return null;
 };
 
 const removeContact = async (contactId) => {
-  const dbRaw = await fs.readFile(contactsPath);
-  const db = JSON.parse(dbRaw);
-  const index = db.findIndex((el) => el.id === contactId);
-  if (index === -1) {
-    return null;
+  const contact = await Contacts.findById(contactId);
+  if (contact) {
+    await Contacts.findByIdAndDelete(contactId);
+    return contact;
   }
-  const deletedContact = db[index];
-  db.splice(index, 1);
-  await fs.writeFile(contactsPath, JSON.stringify(db));
-  return deletedContact;
+  return null;
 };
 
-const addContact = async ({ name, email, phone }) => {
-  const dbRaw = await fs.readFile(contactsPath);
-  const db = JSON.parse(dbRaw);
-  const newContact = {
-    id: uuidv4(),
-    name,
-    email,
-    phone,
-  };
-  db.push(newContact);
-  await fs.writeFile(contactsPath, JSON.stringify(db));
-  return newContact;
+const addContact = async (body) => {
+  const newContacts = await Contacts.create(body, { new: true });
+  return newContacts;
 };
 
 const updateContact = async (contactId, body) => {
-  const dbRaw = await fs.readFile(contactsPath);
-  const db = JSON.parse(dbRaw);
-
-  db.forEach((contacts) => {
-    if (contacts.id === contactId) {
-      if (body.name) {
-        contacts.name = body.name;
-      }
-      if (body.email) {
-        contacts.email = body.email;
-      }
-      if (body.phone) {
-        contacts.phone = body.phone;
-      }
-    }
+  const update = await Contacts.findByIdAndUpdate(contactId, body, {
+    new: true,
   });
-  const index = db.findIndex((el) => el.id === contactId);
-  if (index === -1) {
-    return null;
-  }
-  const contact = db[index];
-  await fs.writeFile(contactsPath, JSON.stringify(db));
-  return contact;
+  return update;
+};
+
+const updateStatusContact = async (contactId, body) => {
+  const update = await Contacts.findByIdAndUpdate(contactId, body, {
+    new: true,
+  });
+  return update;
+
 };
 
 module.exports = {
@@ -75,4 +46,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
+  updateStatusContact,
 };
