@@ -9,6 +9,8 @@ const addPostSchema = Joi.object({
     })
     .required(),
   phone: Joi.string().alphanum().min(3).max(30).required(),
+
+  favorite: Joi.boolean().optional(),
 });
 
 const updatePutSchema = Joi.object({
@@ -20,11 +22,16 @@ const updatePutSchema = Joi.object({
     })
     .optional(),
   phone: Joi.string().alphanum().min(3).max(30).optional(),
+
+  favorite: Joi.boolean().optional(),
 })
   .required()
   .min(1);
 
+const updateStatusSchema = Joi.object({ favorite: Joi.boolean().required() });
+
 module.exports = {
   addPostSchema,
   updatePutSchema,
+  updateStatusSchema,
 };
