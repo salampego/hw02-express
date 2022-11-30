@@ -3,8 +3,12 @@ const jwt = require("jsonwebtoken");
 const createError = require("http-errors");
 const { User, schemas } = require("./user.model");
 
-const register = async (email, password) => {
-  const { error } = schemas.register.validate({ email, password });
+const register = async (email, password, subscription) => {
+  const { error } = schemas.register.validate({
+    email,
+    password,
+    subscription,
+  });
   if (error) {
     throw createError(400, error.message);
   }
@@ -14,8 +18,9 @@ const register = async (email, password) => {
   }
   const hashPassword = await bcrypt.hash(password, 10);
   const result = await User.create({
-    ...{ email, password },
+    email,
     password: hashPassword,
+    subscription,
   });
   return result;
 };
@@ -31,14 +36,12 @@ const login = async (email, password) => {
   }
   const comparePassword = await bcrypt.compare(password, user.password);
   if (!comparePassword) {
-    throw createError(401, "Wrong password");
+    throw createError(401, `${comparePassword}`);
   }
   const payload = { id: user._id };
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
-  await User.findByIdAndUpdate(user._id, { token });
+  await User.findByIdAndUpdate(user._id, { token }, { new: true });
   return token;
 };
-const logout = async (id) => {
-  // const
-};
-module.exports = { register, login, logout };
+
+module.exports = { register, login };

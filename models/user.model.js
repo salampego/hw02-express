@@ -1,6 +1,5 @@
 const { Schema, model } = require("mongoose");
 const Joi = require("joi");
-const bcrypt = require("bcrypt");
 
 const userSchema = new Schema(
   {
@@ -22,27 +21,28 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: "user",
-    },
   },
   { versionKey: false, timestamps: true }
 );
 
 const registerSchema = Joi.object({
-  email: Joi.string().email({
-    minDomainSegments: 2,
-    tlds: { allow: ["com", "net"] },
-  }),
+  email: Joi.string()
+    .email({
+      minDomainSegments: 2,
+      tlds: { allow: ["com", "net"] },
+    })
+    .required(),
   password: Joi.string().min(6).required(),
+  subscription: Joi.string().optional(),
 });
 
 const loginSchema = Joi.object({
-  email: Joi.string().email({
-    minDomainSegments: 2,
-    tlds: { allow: ["com", "net"] },
-  }),
+  email: Joi.string()
+    .email({
+      minDomainSegments: 2,
+      tlds: { allow: ["com", "net"] },
+    })
+    .required(),
   password: Joi.string().min(6).required(),
 });
 
@@ -51,22 +51,9 @@ const schemas = {
   login: loginSchema,
 };
 
-const joiSchema = Joi.object({
-  password: Joi.string().required(),
-  email: Joi.string().required(),
-  subscription: Joi.string(),
-});
-
-userSchema.pre("save", async function () {
-  if (this.isNew) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-});
-
 const User = model("users", userSchema);
 
 module.exports = {
   schemas,
   User,
-  joiSchema,
 };

@@ -1,24 +1,38 @@
 const jwt = require("jsonwebtoken");
-const createError = require("http-errors");
+const { Unauthorized } = require("http-errors");
 const { User } = require("../models/user.model");
 
-const authMiddleware = async (req, res, next) => {
-  const { authorization } = req.headers;
-  const [bearer, token] = authorization.split(" ");
-  if (bearer !== "Bearer") {
-    next(createError(401, "Not authorized"));
-  }
-  try {
-    const { id } = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(id);
-    if (!user || !user.token) {
-      next(createError(401, "Not authorized"));
+async function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization || "";
+
+  const [tokenType, token] = authHeader.split(" ");
+
+  if (tokenType === "Bearer" || token) {
+    try {
+      const verifiedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+      const user = await User.findById(verifiedToken.id);
+      if (!user) {
+        next(new Unauthorized("Not authorized"));
+      }
+      if (!user.token) {
+        next(new Unauthorized("Not authorized"));
+      }
+
+      req.user = user;
+
+      return next();
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        next(new Unauthorized(error.name));
+      }
+      if (error.name === "JsonWebTokenError") {
+        next(new Unauthorized(error.name));
+      }
+      throw error;
     }
-    req.user = user;
-    next();
-  } catch (error) {
-    next(createError(401, error.message));
   }
-};
+  return next(new Unauthorized("No Token"));
+}
 
 module.exports = { authMiddleware };

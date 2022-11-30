@@ -7,9 +7,9 @@ const {
   updateContactById,
 
   updateStatusContactById,
-} = require("../../controllers/controller");
+} = require("../../controllers/Contactscontroller");
 const asyncWrapper = require("../../helpers/apiHelpers");
-const { validation } = require("../../middlewares/validationMiddlewares");
+const { validation } = require("../../middlewares/validationBody");
 const {
   addPostSchema,
   updatePutSchema,

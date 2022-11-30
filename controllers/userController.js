@@ -2,8 +2,8 @@ const { register, login } = require("../models/user");
 const { User } = require("../models/user.model");
 
 const registerController = async (req, res) => {
-  const { email, password } = req.body;
-  await register(email, password);
+  const { email, password, subscription } = req.body;
+  await register(email, password, subscription);
   res.status(201).json({ status: "success", code: 201 });
 };
 const loginController = async (req, res) => {

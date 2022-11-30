@@ -9,7 +9,7 @@ const {
   updateStatusContactById,
 } = require("../../controllers/contactsController");
 const asyncWrapper = require("../../helpers/apiHelpers");
-const { validation } = require("../../middlewares/contactsMiddlewares");
+const { validation } = require("../../middlewares/validationBody");
 const {
   addPostSchema,
   updatePutSchema,
