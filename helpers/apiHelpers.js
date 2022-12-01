@@ -3,7 +3,7 @@ function asyncWrapper(endPointFn) {
     try {
       await endPointFn(req, res, next);
     } catch (error) {
-      console.error("error:", error);
+      console.error("Error:", error);
       next(error);
     }
   };

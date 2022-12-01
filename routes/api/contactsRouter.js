@@ -7,14 +7,14 @@ const {
   updateContactById,
 
   updateStatusContactById,
-} = require("../../controllers/Contactscontroller");
+} = require("../../controllers/contactsController");
 const asyncWrapper = require("../../helpers/apiHelpers");
 const { validation } = require("../../middlewares/validationBody");
 const {
   addPostSchema,
   updatePutSchema,
   updateStatusSchema,
-} = require("../../schemas/schema");
+} = require("../../schemas/contactSchema");
 
 const router = express.Router();
 
