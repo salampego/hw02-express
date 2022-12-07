@@ -1,3 +1,5 @@
+const gravatar = require("gravatar");
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const createError = require("http-errors");
@@ -16,11 +18,17 @@ const register = async (email, password, subscription) => {
   if (user) {
     throw createError(409, `${email} already exists`);
   }
+  const avatar = gravatar.url(email, {
+    s: "200",
+    r: "pg",
+    d: "404",
+  });
   const hashPassword = await bcrypt.hash(password, 10);
   const result = await User.create({
     email,
     password: hashPassword,
     subscription,
+    avatarURL: avatar,
   });
   return result;
 };
@@ -36,7 +44,7 @@ const login = async (email, password) => {
   }
   const comparePassword = await bcrypt.compare(password, user.password);
   if (!comparePassword) {
-    throw createError(401, `${comparePassword}`);
+    throw createError(401, `Wrong password`);
   }
   const payload = { id: user._id };
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
