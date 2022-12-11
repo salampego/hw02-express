@@ -1,8 +1,15 @@
 const path = require("path");
 const Jimp = require("jimp");
 const fs = require("fs/promises");
+const createError = require("http-errors");
+const sgMail = require("@sendgrid/mail");
 const { User } = require("../models/user.model");
 const { register, login } = require("../models/user");
+require("dotenv").config();
+
+const { SEND_GRID_API } = process.env;
+
+sgMail.setApiKey(SEND_GRID_API);
 
 const registerController = async (req, res) => {
   const { email, password, subscription } = req.body;
@@ -78,10 +85,62 @@ const setAvatar = async (req, res) => {
   }
 };
 
+const verification = async (req, res) => {
+  const { verificationToken } = req.params;
+
+  const user = await User.findOneAndUpdate(
+    { verificationToken },
+    { verificationToken: null, verify: true }
+  );
+
+  if (!user) {
+    throw createError(404, "User not found");
+  }
+
+  const msgRegistration = {
+    to: user.email,
+    from: "samplelogo19@gmail.com",
+    subject: "Registration successfull!",
+    text: "Thanks for the choose our service. Have a good one!",
+    html: "<strong>Thanks for the chose our service. And have a good one!</strong>",
+  };
+
+  sgMail.send(msgRegistration);
+
+  res.json({ message: "Verification successful" });
+};
+
+const resendVerificationCode = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw createError(404, "User not found");
+  }
+
+  if (user.verify) {
+    throw createError(400, "Verification has already been passed");
+  }
+
+  const msgVerification = {
+    to: email,
+    from: "samplelogo19@gmail.com",
+    subject: "Please Verify Your Account",
+    text: `Let's verify your email. Click on the link to confirm email http://localhost:3000/api/users/verify/${user.verificationToken}`,
+    html: `<h2> Let's verify your email. </h2> <p>Click on the link to confirm email http://localhost:3000/api/users/verify/${user.verificationToken}</p>`,
+  };
+
+  sgMail.send(msgVerification);
+
+  res.json({ message: "Verification email sent" });
+};
+
 module.exports = {
   registerController,
   loginController,
   logOut,
   getCurrent,
   setAvatar,
+  verification,
+  resendVerificationCode,
 };

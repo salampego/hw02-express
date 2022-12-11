@@ -1,8 +1,10 @@
 const gravatar = require("gravatar");
-
+const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const createError = require("http-errors");
+const sgMail = require("@sendgrid/mail");
+
 const { User, schemas } = require("./user.model");
 
 const register = async (email, password, subscription) => {
@@ -24,12 +26,26 @@ const register = async (email, password, subscription) => {
     d: "404",
   });
   const hashPassword = await bcrypt.hash(password, 10);
+  const verificationToken = uuidv4();
+
+  const msgVerification = {
+    to: email,
+    from: "samplelogo19@gmail.com",
+    subject: "Please Verify Your Account",
+    text: `Let's verify your email. Click on the link to confirm email http://localhost:3000/api/users/verify/${verificationToken}`,
+    html: `<h2> Let's verify your email. </h2> <p>Click on the link to confirm email http://localhost:3000/api/users/verify/${verificationToken}</p>`,
+  };
+
   const result = await User.create({
     email,
     password: hashPassword,
     subscription,
     avatarURL: avatar,
+    verificationToken,
   });
+
+  sgMail.send(msgVerification);
+
   return result;
 };
 
@@ -39,7 +55,7 @@ const login = async (email, password) => {
     throw createError(400, error.message);
   }
   const user = await User.findOne({ email });
-  if (!user) {
+  if (!user || user.verify) {
     throw createError(401, "Wrong email");
   }
   const comparePassword = await bcrypt.compare(password, user.password);
