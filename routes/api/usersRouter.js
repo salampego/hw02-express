@@ -28,7 +28,7 @@ router.patch(
   asyncWrapper(setAvatar)
 );
 
-router.get("/verify/:verificationToken", verification);
+router.get("/verify/:verificationToken", asyncWrapper(verification));
 
 router.post("/verify", asyncWrapper(resendVerificationCode));
 

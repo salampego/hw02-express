@@ -113,11 +113,6 @@ const verification = async (req, res) => {
 const resendVerificationCode = async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
-  // const { error } = schemas.verifyEmailSchema.validate({ email });
-
-  // if (error) {
-  //   throw createError(400, error.message);
-  // }
 
   if (!user) {
     throw createError(404, "User not found");
